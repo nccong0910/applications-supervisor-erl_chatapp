@@ -22,17 +22,17 @@
 %%% API
 %%%===================================================================
 start_link() ->
-	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+	io:format("Server started"),
+	application:set_env(mnesia, dir, "db"),
+	gen_server:start_link({global, ?SERVER}, ?MODULE, [], []).
 
 install() ->
 	ok = mnesia:create_schema([node()]),
 	application:start(mnesia),
 	mnesia:create_table(?USER_TABLE,
 						[{attributes, record_info(fields, users)},
-						% {index, [#users.name]},
 						{disc_copies, [node()]}
 						]).
-	% application:stop(mnesia),
 
 get_users() ->
 	gen_server:cast({global, ?SERVER}, {get_users, self()}).
@@ -48,7 +48,7 @@ init([]) ->
 	try
 		install()
 	catch _:_ ->
-		io:format("Error when install mnesia table~n")
+		io:format("Error when create table ~p~n", [?USER_TABLE])
 	end,
 	{ok, #state{}}.
 

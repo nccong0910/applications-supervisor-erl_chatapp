@@ -1,8 +1,8 @@
 %% @author attack
-%% @doc @todo Add description to chatapp.
+%% @doc @todo Add description to chat_sup.
 
 
--module(chatapp).
+-module(chat_sup).
 
 -behaviour(supervisor).
 
@@ -17,19 +17,14 @@
 %%% API functions
 %%%===================================================================
 start_link() ->
-supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+	supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 %%%===================================================================
 %%% Supervisor callbacks
 %%%===================================================================
 init([]) ->
-	RestartStrategy = one_for_one,
-	MaxRestarts = 1000,
-	MaxSecondsBetweenRestarts = 4000,
-	SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
-	Restart = permanent,
-	Shutdown = 3000,
-	Type = worker,
-	AChild = {'chat_server', {'chat_server', start_link, []}, Restart, Shutdown, Type, ['chat_server']},
-	{ok, {SupFlags, [AChild]}}.
+	AChild = {chat_server,{chat_server, start_link, []},
+	permanent, 2000, worker, [chat_server]},
+	{ok,{{one_for_all,1,1}, [AChild]}}.
+
 
