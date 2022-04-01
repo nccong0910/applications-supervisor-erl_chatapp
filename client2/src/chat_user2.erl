@@ -53,7 +53,7 @@ send_msg(ToClient, Msg) ->
         PID ->  try
                     gen_server:call(PID, {send_msg, #users{name = ToClient}, ?MODULE, Msg}),
                     {ok, connected}
-                catch _:_ -> io:format("No connection to the server")
+                catch _:_ -> io:format("No connection to the server~n")
                 end       
     end.
 

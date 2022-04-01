@@ -51,7 +51,7 @@ chat_register() ->
 
 send_msg(ToClient, Msg) ->
     case global:whereis_name(chat_server) of
-        undefined ->    io:format("No connection to the server");
+        undefined ->    io:format("No connection to the server~n");
         PID ->  try
                     gen_server:call(PID, {send_msg, #users{name = ToClient}, ?MODULE, Msg}),
                     {ok, connected}

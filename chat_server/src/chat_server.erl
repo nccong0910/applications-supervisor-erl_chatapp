@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, get_users/0, send_msg/4, install/0, stop/0]).
+-export([start_link/0, get_users/0, send_msg/4, stop/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -22,16 +22,7 @@
 %%% API
 %%%===================================================================
 start_link() ->
-	application:set_env(mnesia, dir, "db"),
 	gen_server:start_link({global, ?SERVER}, ?MODULE, [], []).
-
-install() ->
-	ok = mnesia:create_schema([node()]),
-	application:start(mnesia),
-	mnesia:create_table(?USER_TABLE,
-						[{attributes, record_info(fields, users)},
-						{disc_copies, [node()]}
-						]).
 
 get_users() ->
 	gen_server:cast({global, ?SERVER}, {get_users, self()}).
@@ -47,11 +38,6 @@ stop() ->
 %%% gen_server callbacks
 %%%===================================================================
 init([]) ->
-	try
-		install()
-	catch _:_ ->
-		io:format("Error when create table ~p~n", [?USER_TABLE])
-	end,
 	{ok, #state{}}.
 
 %%--------------------------------------------------------------------
