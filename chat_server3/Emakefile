@@ -1,8 +1,0 @@
-{"src/*",
-    [
-        debug_info,
-        {i, "include"},
-        {i, "src"},
-        {outdir, "ebin"}
-    ]
-}.
