@@ -9,13 +9,13 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--define(INTERVAL, 1000).
+-define(SV_NODE, 'sv@192.168.238.128').
 
 -record(users, {name, node}).
 
 start_link() ->
     Return = gen_server:start_link({local, ?MODULE}, ?MODULE, {}, []),
-    connect_server('sv@192.168.238.128'),
+    % connect_server(?SV_NODE),
     io:format("start_link: ~p~n", [Return]),
     Return.
 
@@ -23,11 +23,7 @@ init({}) ->
     State = [],
     Return = {ok, State},
     io:format("init: ~p~n", [State]),
-    try
-        chat_register()
-    catch _:_ ->
-        io:format("Register failed~n")
-    end,
+    chat_register(),
     Return.
 
 % ===================================================================
@@ -41,19 +37,25 @@ connect_server(Node) ->
 
 chat_register() ->
     io:format("Connecting...~n"),
-
+    Return = {error, no_proc},
     case global:whereis_name(chat_server) of
-        undefined ->
-            {error, no_proc};
-        PID -> F = fun() ->
-                        gen_server:call(PID, {connect, #users{name = ?MODULE, node = node()}})
-                    end,
-                erlang:send_after(?INTERVAL, self(), F),
-            {ok, connected}
+        undefined ->    Return;
+        PID ->          try
+                            gen_server:call(PID, {connect, #users{name = ?MODULE, node = node()}}),
+                            {ok, connected}
+                        catch _:_ -> Return
+                        end            
     end.
 
 send_msg(ToClient, Msg) ->
-	gen_server:call({global, chat_server}, {send_msg, #users{name = ToClient}, ?MODULE, Msg}).
+    case global:whereis_name(chat_server) of
+        undefined ->    io:format("No connection to the server");
+        PID ->  try
+                    gen_server:call(PID, {send_msg, #users{name = ToClient}, ?MODULE, Msg}),
+                    {ok, connected}
+                catch _:_ -> io:format("No connection to the server")
+                end       
+    end.
 
 % ===================================================================
 handle_call({message, From, Msg}, _From, State) ->

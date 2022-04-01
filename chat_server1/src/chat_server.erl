@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, get_users/0, send_msg/4, install/0]).
+-export([start_link/0, get_users/0, send_msg/4, install/0, stop/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -22,7 +22,6 @@
 %%% API
 %%%===================================================================
 start_link() ->
-	io:format("Server started"),
 	application:set_env(mnesia, dir, "db"),
 	gen_server:start_link({global, ?SERVER}, ?MODULE, [], []).
 
@@ -40,6 +39,9 @@ get_users() ->
 send_msg(From, ToNode, ToClt, Msg) ->
 	io:format("Message from ~p to ~p~n", [From, ToClt]),
 	gen_server:call({ToClt, ToNode}, {message, From, Msg}).
+
+stop() ->
+	gen_server:call({global, ?SERVER}, stop).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -92,6 +94,9 @@ handle_call({send_msg, #users{name = ToClt}, FromU, Msg}, _From, State) ->
 
 handle_call({exit, Pid}, _From, State) ->
     {reply, {exit, Pid}, State};
+
+handle_call(stop, _From, State) ->
+	{stop, normal, ok, State};
 
 handle_call(Request, _From, State) ->
     error_logger:warning_msg("Bad message: ~p~n", [Request]),
